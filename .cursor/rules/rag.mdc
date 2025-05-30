@@ -1,0 +1,21 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# rag Directory Guide
+
+The [rag/](mdc:rag) directory contains the core logic for retrieval-augmented generation, including:
+
+- [prompts.py](mdc:rag/prompts.py): Prompt templates and logic for RAG workflows.
+- [settings.py](mdc:rag/settings.py): Configuration settings for RAG modules.
+- [raptor.py](mdc:rag/raptor.py): Raptor-specific logic and utilities.
+- [benchmark.py](mdc:rag/benchmark.py): Benchmarking tools for RAG performance.
+- [utils/](mdc:rag/utils): Utility functions and helpers.
+- [nlp/](mdc:rag/nlp): Natural language processing components.
+- [llm/](mdc:rag/llm): Large language model integration.
+- [app/](mdc:rag/app): Application logic and endpoints.
+- [res/](mdc:rag/res): Resource files for RAG modules.
+- [svr/](mdc:rag/svr): Server-side logic for RAG.
+
+See each referenced file or subdirectory for more details on its role in the RAG pipeline.

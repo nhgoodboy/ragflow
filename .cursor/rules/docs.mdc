@@ -1,0 +1,19 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# docs Directory Guide
+
+The [docs/](mdc:docs) directory contains documentation, guides, and references for the project, including:
+
+- [quickstart.mdx](mdc:docs/quickstart.mdx): Quickstart guide for getting started.
+- [release_notes.md](mdc:docs/release_notes.md): Release notes and changelog.
+- [configurations.md](mdc:docs/configurations.md): Configuration documentation.
+- [faq.mdx](mdc:docs/faq.mdx): Frequently asked questions.
+- [guides/](mdc:docs/guides): In-depth guides on datasets, agents, chat, models, and more.
+- [references/](mdc:docs/references): Reference documentation.
+- [develop/](mdc:docs/develop): Developer-focused documentation.
+- [contribution/](mdc:docs/contribution): Contribution guidelines.
+
+See each referenced file or subdirectory for more details on documentation and guides.

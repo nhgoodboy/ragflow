@@ -1,0 +1,14 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# deepdoc Directory Guide
+
+The [deepdoc/](mdc:deepdoc) directory contains document parsing and vision modules, including:
+
+- [vision/](mdc:deepdoc/vision): Vision-based document recognition and OCR modules.
+- [parser/](mdc:deepdoc/parser): Parsers for various document formats (PDF, DOCX, Excel, etc.).
+- [README.md](mdc:deepdoc/README.md): Documentation for deepdoc modules.
+
+See each referenced file or subdirectory for more details on document parsing and vision logic.

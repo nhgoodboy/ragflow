@@ -1,0 +1,14 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Python SDK Guide
+
+The [sdk/python/ragflow_sdk/](mdc:sdk/python/ragflow_sdk) directory contains the Python SDK implementation for interacting with the RAGFlow system.
+
+- [ragflow.py](mdc:sdk/python/ragflow_sdk/ragflow.py): Main SDK logic and client interface.
+- [modules/](mdc:sdk/python/ragflow_sdk/modules): Modular components for the SDK.
+- [__init__.py](mdc:sdk/python/ragflow_sdk/__init__.py): SDK package initialization.
+
+See each referenced file or subdirectory for more details on the SDK's structure and usage.

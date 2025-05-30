@@ -1,0 +1,18 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# graphrag Directory Guide
+
+The [graphrag/](mdc:graphrag) directory contains logic for graph-based retrieval and entity resolution, including:
+
+- [search.py](mdc:graphrag/search.py): Graph-based search logic.
+- [utils.py](mdc:graphrag/utils.py): Utility functions for graph-based retrieval.
+- [entity_resolution.py](mdc:graphrag/entity_resolution.py): Entity resolution logic.
+- [entity_resolution_prompt.py](mdc:graphrag/entity_resolution_prompt.py): Prompt templates for entity resolution.
+- [query_analyze_prompt.py](mdc:graphrag/query_analyze_prompt.py): Query analysis prompt logic.
+- [general/](mdc:graphrag/general): General graph-based logic.
+- [light/](mdc:graphrag/light): Lightweight graph-based logic.
+
+See each referenced file or subdirectory for more details on graph-based retrieval and entity resolution.

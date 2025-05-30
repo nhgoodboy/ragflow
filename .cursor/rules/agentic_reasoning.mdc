@@ -1,0 +1,13 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# agentic_reasoning Directory Guide
+
+The [agentic_reasoning/](mdc:agentic_reasoning) directory contains logic for agentic reasoning and prompt management, including:
+
+- [deep_research.py](mdc:agentic_reasoning/deep_research.py): Deep research and reasoning logic.
+- [prompts.py](mdc:agentic_reasoning/prompts.py): Prompt templates and management for agentic reasoning.
+
+See each referenced file for more details on agentic reasoning logic and prompt handling.

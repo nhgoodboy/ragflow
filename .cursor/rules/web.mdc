@@ -1,0 +1,19 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# web Directory Guide
+
+The [web/](mdc:web) directory contains the frontend code and configuration for the project, including:
+
+- [src/](mdc:web/src): Main frontend source code (TypeScript/React, etc.).
+- [public/](mdc:web/public): Static assets for the frontend.
+- [tailwind.config.js](mdc:web/tailwind.config.js): Tailwind CSS configuration.
+- [tailwind.css](mdc:web/tailwind.css): Main Tailwind CSS file.
+- [tsconfig.json](mdc:web/tsconfig.json): TypeScript configuration.
+- [package.json](mdc:web/package.json): Node.js dependencies and scripts.
+- [.umirc.ts](mdc:web/.umirc.ts): UmiJS configuration.
+- [jest.config.ts](mdc:web/jest.config.ts): Jest testing configuration.
+
+See each referenced file or subdirectory for more details on the frontend setup.

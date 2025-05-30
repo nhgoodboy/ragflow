@@ -1,0 +1,17 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# agent Directory Guide
+
+The [agent/](mdc:agent) directory contains logic for agent-based reasoning and orchestration, including:
+
+- [canvas.py](mdc:agent/canvas.py): Main agent canvas and workflow logic.
+- [settings.py](mdc:agent/settings.py): Agent configuration settings.
+- [component/](mdc:agent/component): Individual agent components (retrieval, search, translation, etc.).
+- [templates/](mdc:agent/templates): Agent templates.
+- [test/](mdc:agent/test): Agent-related tests.
+- [README.md](mdc:agent/README.md): Agent module documentation.
+
+See each referenced file or subdirectory for more details on agent logic and components.

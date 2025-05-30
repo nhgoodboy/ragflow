@@ -1,0 +1,22 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# agent/component Directory Guide
+
+The [agent/component/](mdc:agent/component) directory contains individual agent components, each implementing a specific capability or integration. Notable files include:
+
+- [retrieval.py](mdc:agent/component/retrieval.py): Retrieval component logic.
+- [template.py](mdc:agent/component/template.py): Template management for agents.
+- [wikipedia.py](mdc:agent/component/wikipedia.py): Wikipedia integration.
+- [rewrite.py](mdc:agent/component/rewrite.py): Text rewriting logic.
+- [switch.py](mdc:agent/component/switch.py): Component switching logic.
+- [generate.py](mdc:agent/component/generate.py): Text generation logic.
+- [base.py](mdc:agent/component/base.py): Base class for agent components.
+- [email.py](mdc:agent/component/email.py): Email integration.
+- [google.py](mdc:agent/component/google.py): Google search integration.
+- [bing.py](mdc:agent/component/bing.py): Bing search integration.
+- [baidu.py](mdc:agent/component/baidu.py): Baidu search integration.
+
+See each referenced file for more details on the specific component's logic and integration.

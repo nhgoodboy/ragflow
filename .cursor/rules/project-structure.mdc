@@ -1,0 +1,27 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# Project Structure Guide
+
+This project is organized into several key directories and files:
+
+- [rag/](mdc:rag): Core logic, including NLP, LLM, utilities, and application modules.
+- [web/](mdc:web): Frontend code and configuration (TypeScript, Tailwind, etc.).
+- [api/](mdc:api): API server, settings, and utilities.
+- [sdk/python/ragflow_sdk/](mdc:sdk/python/ragflow_sdk): Python SDK implementation.
+- [agent/](mdc:agent): Agent logic, components, and templates.
+- [agent/component/](mdc:agent/component): Individual agent components (retrieval, search, translation, etc.).
+- [agentic_reasoning/](mdc:agentic_reasoning): Agentic reasoning and prompt logic.
+- [graphrag/](mdc:graphrag): Graph-based retrieval and entity resolution.
+- [deepdoc/](mdc:deepdoc): Document parsing and vision modules.
+- [example/](mdc:example): Example usage for SDK and HTTP.
+- [docs/](mdc:docs): Documentation, guides, and references.
+
+Entry points and configuration:
+- [README.md](mdc:README.md): Main project documentation.
+- [pyproject.toml](mdc:pyproject.toml): Python project configuration.
+- [Dockerfile](mdc:Dockerfile): Containerization setup.
+
+See each referenced directory for more detailed rules and structure.

@@ -1,0 +1,19 @@
+---
+description:
+globs:
+alwaysApply: false
+---
+# api Directory Guide
+
+The [api/](mdc:api) directory contains the backend API server logic, including:
+
+- [ragflow_server.py](mdc:api/ragflow_server.py): Main API server implementation.
+- [settings.py](mdc:api/settings.py): API configuration settings.
+- [versions.py](mdc:api/versions.py): API versioning information.
+- [validation.py](mdc:api/validation.py): Input validation logic.
+- [constants.py](mdc:api/constants.py): API constants.
+- [utils/](mdc:api/utils): Utility functions for the API.
+- [db/](mdc:api/db): Database-related logic and models.
+- [apps/](mdc:api/apps): Application-specific API endpoints.
+
+See each referenced file or subdirectory for more details on the API backend.
