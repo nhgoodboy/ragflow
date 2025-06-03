@@ -1,0 +1,30 @@
+sequenceDiagram
+    participant User as 用户
+    participant WebUI as Web界面
+    participant API as API网关
+    participant RAG as RAG引擎
+    participant DeepDoc as 文档处理
+    participant Vector as 向量数据库
+    participant LLM as 大语言模型
+    participant DB as 数据库
+    
+    User->>WebUI: 上传文档/提问
+    WebUI->>API: HTTP请求
+    API->>RAG: 处理请求
+    
+    alt 文档上传流程
+        RAG->>DeepDoc: 文档解析
+        DeepDoc->>DeepDoc: 文档分块
+        DeepDoc->>Vector: 向量化存储
+        Vector->>DB: 元数据存储
+    else 问答流程
+        RAG->>Vector: 相似性搜索
+        Vector->>RAG: 相关文档片段
+        RAG->>LLM: 增强提示词
+        LLM->>RAG: 生成回答
+        RAG->>DB: 记录对话历史
+    end
+    
+    RAG->>API: 返回结果
+    API->>WebUI: 响应数据
+    WebUI->>User: 显示结果

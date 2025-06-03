@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>企业系统 - RAGFlow 聊天集成示例</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Microsoft YaHei', Arial, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: #fff;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            padding: 0 24px;
+            height: 64px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: bold;
+            color: #1890ff;
+        }
+        
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .user-select {
+            padding: 8px 12px;
+            border: 1px solid #d9d9d9;
+            border-radius: 6px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        .content {
+            display: flex;
+            height: calc(100vh - 64px);
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: white;
+            border-right: 1px solid #e8e8e8;
+            padding: 20px;
+        }
+        
+        .main-content {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            background: white;
+            padding: 16px 24px;
+            border-bottom: 1px solid #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .chat-container {
+            flex: 1;
+            background: #fafbfc;
+            position: relative;
+        }
+        
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            color: #999;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #1890ff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 12px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .user-list {
+            list-style: none;
+        }
+        
+        .user-item {
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-bottom: 8px;
+            border: 2px solid transparent;
+        }
+        
+        .user-item:hover {
+            background: #f0f0f0;
+        }
+        
+        .user-item.active {
+            background: #e6f7ff;
+            border-color: #1890ff;
+        }
+        
+        .user-name {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .user-id {
+            font-size: 12px;
+            color: #999;
+        }
+        
+        .section-title {
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #262626;
+        }
+        
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+        
+        .btn-primary {
+            background: #1890ff;
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background: #40a9ff;
+        }
+        
+        .error {
+            color: #ff4d4f;
+            background: #fff2f0;
+            border: 1px solid #ffccc7;
+            padding: 12px;
+            border-radius: 6px;
+            margin: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">企业智能助手系统</div>
+        <div class="user-info">
+            <span>当前用户:</span>
+            <span id="current-user-name">请选择用户</span>
+            <button class="btn btn-primary" onclick="refreshChat()">刷新聊天</button>
+        </div>
+    </div>
+    
+    <div class="content">
+        <div class="sidebar">
+            <h3 class="section-title">用户列表</h3>
+            <ul class="user-list" id="user-list">
+                <!-- 用户列表将通过JavaScript动态填充 -->
+            </ul>
+        </div>
+        
+        <div class="main-content">
+            <div class="chat-header">
+                <div>
+                    <h3 id="chat-title">RAGFlow 智能助手</h3>
+                    <p id="chat-subtitle">请选择用户开始聊天</p>
+                </div>
+                <div id="session-info" style="font-size: 12px; color: #999;"></div>
+            </div>
+            
+            <div class="chat-container" id="chat-container">
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <div>正在加载聊天窗口...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 配置信息
+        const CONFIG = {
+            baseURL: 'http://sz.safewaychina.cn:7080',
+            apiKey: 'YOUR_API_KEY',           // 需要替换为实际的API密钥
+            chatId: 'YOUR_CHAT_ID',           // 需要替换为实际的聊天助手ID
+            auth: 'UzOTkwZmEyM2NmYzExZjA4MDE1ZmFjYT' // 现有的auth token
+        };
+
+        // 模拟用户数据
+        const USERS = [
+            { id: 'user_001', name: '张三', department: '技术部' },
+            { id: 'user_002', name: '李四', department: '市场部' },
+            { id: 'user_003', name: '王五', department: '销售部' },
+            { id: 'user_004', name: '赵六', department: '人事部' },
+            { id: 'user_005', name: '钱七', department: '财务部' }
+        ];
+
+        let currentUser = null;
+        let chatIntegration = null;
+
+        // 简化版的聊天集成类
+        class SimpleChatIntegration {
+            constructor(config) {
+                this.baseURL = config.baseURL;
+                this.apiKey = config.apiKey;
+                this.chatId = config.chatId;
+                this.auth = config.auth;
+            }
+
+            async createUserSession(userId, userName) {
+                try {
+                    // 注意：这里使用现有的shared_id作为示例
+                    // 在实际应用中，您需要调用API创建新会话
+                    console.log(`为用户 ${userName}(${userId}) 创建会话`);
+                    
+                    // 模拟API调用
+                    return {
+                        success: true,
+                        sessionId: `session_${userId}_${Date.now()}`,
+                        sessionName: `${userName}的会话`
+                    };
+                } catch (error) {
+                    console.error('创建会话失败:', error);
+                    return { success: false, error: error.message };
+                }
+            }
+
+            generateUserChatURL(userId, sessionId = null) {
+                // 为演示目的，使用现有的shared_id
+                // 在实际应用中，每个用户应该有独立的sessionId
+                const actualSessionId = sessionId || 'c23776c03cfa11f08a28faca3d0be991';
+                return `${this.baseURL}/chat/share?shared_id=${actualSessionId}&from=chat&auth=${this.auth}&user_id=${userId}`;
+            }
+
+            async embedUserChat(containerId, userId, userName) {
+                try {
+                    // 显示加载状态
+                    const container = document.getElementById(containerId);
+                    container.innerHTML = `
+                        <div class="loading">
+                            <div class="spinner"></div>
+                            <div>正在为 ${userName} 加载聊天窗口...</div>
+                        </div>
+                    `;
+
+                    // 模拟异步处理
+                    await new Promise(resolve => setTimeout(resolve, 1000));
+
+                    // 生成聊天URL
+                    const chatURL = this.generateUserChatURL(userId);
+                    
+                    container.innerHTML = `
+                        <iframe
+                            src="${chatURL}"
+                            style="width: 100%; height: 100%; border: none;"
+                            frameborder="0"
+                            title="${userName}的聊天窗口"
+                        ></iframe>
+                    `;
+                    
+                    return chatURL;
+                } catch (error) {
+                    console.error('嵌入聊天窗口失败:', error);
+                    
+                    const container = document.getElementById(containerId);
+                    container.innerHTML = `
+                        <div class="error">
+                            聊天窗口加载失败: ${error.message}
+                            <br><br>
+                            <button class="btn btn-primary" onclick="switchUser('${userId}')">重试</button>
+                        </div>
+                    `;
+                    throw error;
+                }
+            }
+        }
+
+        // 初始化
+        function init() {
+            chatIntegration = new SimpleChatIntegration(CONFIG);
+            renderUserList();
+            
+            // 默认显示欢迎信息
+            document.getElementById('chat-container').innerHTML = `
+                <div style="display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100%; color: #999;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">💬</div>
+                    <h3>欢迎使用企业智能助手</h3>
+                    <p>请从左侧选择用户开始聊天</p>
+                </div>
+            `;
+        }
+
+        // 渲染用户列表
+        function renderUserList() {
+            const userList = document.getElementById('user-list');
+            userList.innerHTML = USERS.map(user => `
+                <li class="user-item" onclick="switchUser('${user.id}')">
+                    <div class="user-name">${user.name}</div>
+                    <div class="user-id">ID: ${user.id} | ${user.department}</div>
+                </li>
+            `).join('');
+        }
+
+        // 切换用户
+        async function switchUser(userId) {
+            try {
+                const user = USERS.find(u => u.id === userId);
+                if (!user) {
+                    throw new Error('用户不存在');
+                }
+
+                // 更新当前用户
+                currentUser = user;
+                
+                // 更新UI状态
+                updateUserSelection(userId);
+                updateChatHeader(user);
+                
+                // 嵌入聊天窗口
+                await chatIntegration.embedUserChat('chat-container', user.id, user.name);
+                
+                // 更新会话信息
+                updateSessionInfo(user);
+                
+                console.log(`已切换到用户: ${user.name} (${user.id})`);
+            } catch (error) {
+                console.error('切换用户失败:', error);
+                alert('切换用户失败: ' + error.message);
+            }
+        }
+
+        // 更新用户选择状态
+        function updateUserSelection(selectedUserId) {
+            document.querySelectorAll('.user-item').forEach(item => {
+                item.classList.remove('active');
+            });
+            
+            const selectedItem = document.querySelector(`[onclick="switchUser('${selectedUserId}')"]`);
+            if (selectedItem) {
+                selectedItem.classList.add('active');
+            }
+            
+            document.getElementById('current-user-name').textContent = 
+                currentUser ? `${currentUser.name} (${currentUser.department})` : '请选择用户';
+        }
+
+        // 更新聊天头部
+        function updateChatHeader(user) {
+            document.getElementById('chat-title').textContent = `${user.name} 的专属智能助手`;
+            document.getElementById('chat-subtitle').textContent = `${user.department} | 用户ID: ${user.id}`;
+        }
+
+        // 更新会话信息
+        function updateSessionInfo(user) {
+            const sessionInfo = document.getElementById('session-info');
+            sessionInfo.innerHTML = `
+                会话ID: session_${user.id}_${Date.now()}<br>
+                创建时间: ${new Date().toLocaleString()}
+            `;
+        }
+
+        // 刷新聊天
+        async function refreshChat() {
+            if (currentUser) {
+                await switchUser(currentUser.id);
+            } else {
+                alert('请先选择用户');
+            }
+        }
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', init);
+
+        // 模拟实际API调用的函数（用于演示）
+        async function createRealUserSession(userId, userName) {
+            try {
+                const response = await fetch(`${CONFIG.baseURL}/api/v1/chats/${CONFIG.chatId}/sessions`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${CONFIG.apiKey}`
+                    },
+                    body: JSON.stringify({
+                        name: `${userName}的聊天会话`,
+                        user_id: userId
+                    })
+                });
+
+                const result = await response.json();
+                
+                if (result.code === 0) {
+                    return {
+                        success: true,
+                        sessionId: result.data.id,
+                        sessionName: result.data.name
+                    };
+                } else {
+                    throw new Error(result.message);
+                }
+            } catch (error) {
+                console.error('API调用失败:', error);
+                return { success: false, error: error.message };
+            }
+        }
+    </script>
+</body>
+</html> 

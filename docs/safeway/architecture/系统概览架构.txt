@@ -1,0 +1,75 @@
+graph TB
+    %% 用户界面层
+    subgraph "前端层 Frontend Layer"
+        WebUI[Web界面<br/>React + Umi + Ant Design]
+        API_Gateway[API网关<br/>Nginx反向代理]
+    end
+    
+    %% 应用服务层
+    subgraph "应用服务层 Application Layer"
+        RagFlow_Server[RAGFlow主服务<br/>Flask + Python]
+        Agent_Service[AI Agent服务<br/>多模态AI助手]
+        MCP_Server[MCP服务器<br/>模型控制协议]
+        Sandbox[代码执行沙箱<br/>安全代码执行环境]
+    end
+    
+    %% 核心业务层
+    subgraph "核心业务层 Core Business Layer"
+        RAG_Engine[RAG引擎<br/>检索增强生成]
+        DeepDoc[DeepDoc<br/>深度文档理解]
+        GraphRAG[GraphRAG<br/>图谱RAG]
+        LLM_Integration[LLM集成层<br/>多模型支持]
+        NLP_Engine[NLP处理引擎<br/>自然语言处理]
+    end
+    
+    %% 数据存储层
+    subgraph "数据存储层 Data Layer"
+        MySQL[(MySQL数据库<br/>结构化数据)]
+        VectorDB[(向量数据库<br/>Elasticsearch/OpenSearch)]
+        Infinity[(Infinity向量引擎<br/>高性能向量搜索)]
+        MinIO[(MinIO对象存储<br/>文件存储)]
+        Redis[(Redis缓存<br/>会话和缓存)]
+    end
+    
+    %% 外部集成
+    subgraph "外部集成 External Integrations"
+        LLM_Providers[LLM提供商<br/>OpenAI/Anthropic/阿里云等]
+        Internet_Search[互联网搜索<br/>Tavily/DuckDuckGo]
+        Cloud_Storage[云存储<br/>Azure/AWS S3]
+    end
+    
+    %% 连接关系
+    WebUI --> API_Gateway
+    API_Gateway --> RagFlow_Server
+    RagFlow_Server --> Agent_Service
+    RagFlow_Server --> MCP_Server
+    Agent_Service --> Sandbox
+    
+    RagFlow_Server --> RAG_Engine
+    RagFlow_Server --> DeepDoc
+    RAG_Engine --> GraphRAG
+    RAG_Engine --> LLM_Integration
+    DeepDoc --> NLP_Engine
+    
+    RAG_Engine --> VectorDB
+    RAG_Engine --> Infinity
+    RagFlow_Server --> MySQL
+    RagFlow_Server --> MinIO
+    RagFlow_Server --> Redis
+    
+    LLM_Integration --> LLM_Providers
+    Agent_Service --> Internet_Search
+    MinIO --> Cloud_Storage
+    
+    %% 样式定义
+    classDef frontend fill:#e1f5fe
+    classDef application fill:#f3e5f5
+    classDef business fill:#e8f5e8
+    classDef data fill:#fff3e0
+    classDef external fill:#fce4ec
+    
+    class WebUI,API_Gateway frontend
+    class RagFlow_Server,Agent_Service,MCP_Server,Sandbox application
+    class RAG_Engine,DeepDoc,GraphRAG,LLM_Integration,NLP_Engine business
+    class MySQL,VectorDB,Infinity,MinIO,Redis data
+    class LLM_Providers,Internet_Search,Cloud_Storage external
