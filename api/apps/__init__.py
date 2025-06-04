@@ -27,7 +27,9 @@ from itsdangerous.url_safe import URLSafeTimedSerializer as Serializer
 from api.db import StatusEnum
 from api.db.db_models import close_connection
 from api.db.services import UserService
-from api.utils import CustomJSONEncoder, commands
+from api.db.services.user_service import UserService
+from api.db.services.enterprise_auth_service import EnterpriseAuthService
+from api.utils import CustomJSONEncoder, commands, get_uuid
 
 from flask_session import Session
 from flask_login import LoginManager
@@ -143,6 +145,23 @@ client_urls_prefix = [
 def load_user(web_request):
     jwt = Serializer(secret_key=settings.SECRET_KEY)
     authorization = web_request.headers.get("Authorization")
+    
+    # 检查企业token参数
+    enterprise_token = web_request.args.get("enterprise_token")
+    if enterprise_token:
+        try:
+            user_data = EnterpriseAuthService.verify_enterprise_token(enterprise_token)
+            if user_data:
+                user = EnterpriseAuthService.create_or_update_user(user_data)
+                if user:
+                    # 设置access_token用于后续认证
+                    user.access_token = get_uuid()
+                    user.save()
+                    return user
+        except Exception as e:
+            logging.warning(f"Enterprise token authentication failed: {e}")
+    
+    # 原有的JWT认证逻辑
     if authorization:
         try:
             access_token = str(jwt.loads(authorization))

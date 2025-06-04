@@ -467,6 +467,9 @@ class User(DataBaseModel, UserMixin):
     login_channel = CharField(null=True, help_text="from which user login", index=True)
     status = CharField(max_length=1, null=True, help_text="is it validate(0: wasted, 1: validate)", default="1", index=True)
     is_superuser = BooleanField(null=True, help_text="is root", default=False, index=True)
+    # 企业用户字段
+    enterprise_user_id = CharField(max_length=255, null=True, help_text="enterprise system user id", index=True)
+    enterprise_source = CharField(max_length=64, null=True, help_text="enterprise system source", index=True)
 
     def __str__(self):
         return self.email
@@ -885,5 +888,15 @@ def migrate_db():
         pass
     try:
         migrate(migrator.add_column("llm", "is_tools", BooleanField(null=False, help_text="support tools", default=False)))
+    except Exception:
+        pass
+    
+    # 企业认证相关迁移
+    try:
+        migrate(migrator.add_column("user", "enterprise_user_id", CharField(max_length=255, null=True, help_text="enterprise system user id", index=True)))
+    except Exception:
+        pass
+    try:
+        migrate(migrator.add_column("user", "enterprise_source", CharField(max_length=64, null=True, help_text="enterprise system source", index=True)))
     except Exception:
         pass

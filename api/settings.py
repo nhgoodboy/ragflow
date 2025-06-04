@@ -66,6 +66,8 @@ kg_retrievaler = None
 # user registration switch
 REGISTER_ENABLED = 1
 
+# enterprise authentication
+ENTERPRISE_AUTH = None
 
 # sandbox-executor-manager
 SANDBOX_ENABLED = 0
@@ -76,6 +78,7 @@ BUILTIN_EMBEDDING_MODELS = ["BAAI/bge-large-zh-v1.5@BAAI", "maidalun1020/bce-emb
 
 def init_settings():
     global LLM, LLM_FACTORY, LLM_BASE_URL, LIGHTEN, DATABASE_TYPE, DATABASE, FACTORY_LLM_INFOS, REGISTER_ENABLED
+    global ENTERPRISE_AUTH
     LIGHTEN = int(os.environ.get("LIGHTEN", "0"))
     DATABASE_TYPE = os.getenv("DB_TYPE", "mysql")
     DATABASE = decrypt_database_config(name=DATABASE_TYPE)
@@ -154,6 +157,19 @@ def init_settings():
     if int(os.environ.get("SANDBOX_ENABLED", "0")):
         global SANDBOX_HOST
         SANDBOX_HOST = os.environ.get("SANDBOX_HOST", "sandbox-executor-manager")
+
+    # Enterprise authentication configuration
+    ENTERPRISE_AUTH = get_base_config("enterprise_auth", {
+        "enabled": False,
+        "jwt_secret": "",
+        "role_mapping": {
+            "enterprise_admin": "admin",
+            "enterprise_user": "normal"
+        },
+        "token_expiry": 3600,  # 1 hour
+        "allowed_domains": [],  # Empty means all domains allowed
+        "auto_create_user": True
+    })
 
 
 class CustomEnum(Enum):
