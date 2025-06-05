@@ -1,0 +1,72 @@
+flowchart TB
+ subgraph subGraph0["用户访问层 User Access Layer"]
+        User["用户浏览器<br>Browser"]
+        LoadBalancer["负载均衡器<br>Load Balancer"]
+  end
+ subgraph subGraph1["前端服务层 Frontend Layer"]
+        Nginx["Nginx反向代理<br>:80, :443<br>ragflow-nginx"]
+        WebUI["Web前端界面<br>React + Ant Design<br>静态文件服务"]
+  end
+ subgraph subGraph2["应用服务层 Application Layer"]
+        RagFlowServer["RAGFlow主服务<br>:9380<br>ragflow-server<br>Flask + Python"]
+  end
+ subgraph subGraph3["数据存储层 Data Storage Layer"]
+        MySQL["MySQL数据库<br>:3306<br>ragflow-mysql<br>结构化数据存储"]
+        Redis["Redis缓存<br>:6379<br>ragflow-redis<br>Valkey 8.0<br>会话缓存"]
+        MinIO["MinIO对象存储<br>:9000, :9001<br>ragflow-minio<br>文件存储"]
+  end
+ subgraph subGraph4["向量搜索层 Vector Search Layer"]
+        choice1{"选择向量引擎"}
+        ES["Elasticsearch<br>:9200<br>ragflow-es-01<br>向量搜索引擎"]
+  end
+ subgraph subGraph5["数据卷 Data Volumes"]
+        ESData["esdata01<br>Elasticsearch数据"]
+        MySQLData["mysql_data<br>MySQL数据"]
+        MinIOData["minio_data<br>MinIO数据"]
+        RedisData["redis_data<br>Redis数据"]
+        LogsData["ragflow-logs<br>应用日志"]
+  end
+ subgraph subGraph6["Docker网络 Network"]
+        DockerNetwork["ragflow<br>bridge网络<br>容器间通信"]
+  end
+    User --> LoadBalancer
+    LoadBalancer --> Nginx
+    Nginx --> WebUI & RagFlowServer
+    RagFlowServer --> MySQL & Redis & MinIO & choice1 & LogsData
+    choice1 -- Profile: elasticsearch --> ES
+    ES --> ESData
+    MySQL --> MySQLData
+    MinIO --> MinIOData
+    Redis --> RedisData
+    Nginx -.-> DockerNetwork
+    RagFlowServer -.-> DockerNetwork
+    MySQL -.-> DockerNetwork
+    Redis -.-> DockerNetwork
+    MinIO -.-> DockerNetwork
+    ES -.-> DockerNetwork
+
+     User:::userLayer
+     LoadBalancer:::userLayer
+     Nginx:::frontendLayer
+     WebUI:::frontendLayer
+     RagFlowServer:::appLayer
+     MySQL:::dataLayer
+     Redis:::dataLayer
+     MinIO:::dataLayer
+     choice1:::vectorLayer
+     ES:::vectorLayer
+     ESData:::volumeLayer
+     MySQLData:::volumeLayer
+     MinIOData:::volumeLayer
+     RedisData:::volumeLayer
+     LogsData:::volumeLayer
+     DockerNetwork:::networkLayer
+    classDef userLayer fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef frontendLayer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef appLayer fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef dataLayer fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef vectorLayer fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef volumeLayer fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+    classDef networkLayer fill:#e0f2f1,stroke:#00796b,stroke-width:2px
+
+

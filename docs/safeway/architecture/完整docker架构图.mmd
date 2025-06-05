@@ -1,0 +1,104 @@
+graph TB
+    %% 用户访问层
+    subgraph "用户访问层 User Access Layer"
+        User[用户浏览器<br/>Browser]
+        LoadBalancer[负载均衡器<br/>Load Balancer]
+    end
+
+    %% 前端服务层
+    subgraph "前端服务层 Frontend Layer"
+        Nginx[Nginx反向代理<br/>:80, :443<br/>ragflow-nginx]
+        WebUI[Web前端界面<br/>React + Ant Design<br/>静态文件服务]
+    end
+
+    %% 应用服务层
+    subgraph "应用服务层 Application Layer"
+        RagFlowServer[RAGFlow主服务<br/>:9380<br/>ragflow-server<br/>Flask + Python]
+        MCPServer[MCP服务器<br/>:9382<br/>模型控制协议<br/>可选启用]
+        SandboxManager[沙箱执行管理器<br/>:9385<br/>ragflow-sandbox-executor-manager<br/>代码执行安全沙箱]
+    end
+
+    %% 数据存储层
+    subgraph "数据存储层 Data Storage Layer"
+        MySQL[MySQL数据库<br/>:3306<br/>ragflow-mysql<br/>结构化数据存储]
+        Redis[Redis缓存<br/>:6379<br/>ragflow-redis<br/>Valkey 8.0<br/>会话缓存]
+        MinIO[MinIO对象存储<br/>:9000, :9001<br/>ragflow-minio<br/>文件存储]
+    end
+
+    %% 向量搜索层
+    subgraph "向量搜索层 Vector Search Layer"
+        choice1{选择向量引擎}
+        ES[Elasticsearch<br/>:9200<br/>ragflow-es-01<br/>向量搜索引擎]
+        OpenSearch[OpenSearch<br/>:9201<br/>ragflow-opensearch-01<br/>向量搜索引擎]
+        Infinity[Infinity向量数据库<br/>:23817, :23820, :5432<br/>ragflow-infinity<br/>高性能向量引擎]
+    end
+
+    %% 存储卷
+    subgraph "数据卷 Data Volumes"
+        ESData[esdata01<br/>Elasticsearch数据]
+        OSData[osdata01<br/>OpenSearch数据]
+        InfinityData[infinity_data<br/>Infinity数据]
+        MySQLData[mysql_data<br/>MySQL数据]
+        MinIOData[minio_data<br/>MinIO数据]
+        RedisData[redis_data<br/>Redis数据]
+        LogsData[ragflow-logs<br/>应用日志]
+    end
+
+    %% 网络
+    subgraph "Docker网络 Network"
+        DockerNetwork[ragflow<br/>bridge网络<br/>容器间通信]
+    end
+
+    %% 连接关系
+    User --> LoadBalancer
+    LoadBalancer --> Nginx
+    Nginx --> WebUI
+    Nginx --> RagFlowServer
+
+    RagFlowServer --> MCPServer
+    RagFlowServer --> SandboxManager
+    RagFlowServer --> MySQL
+    RagFlowServer --> Redis
+    RagFlowServer --> MinIO
+
+    RagFlowServer --> choice1
+    choice1 -->|Profile: elasticsearch| ES
+    choice1 -->|Profile: opensearch| OpenSearch
+    choice1 -->|Profile: infinity| Infinity
+
+    %% 数据卷连接
+    ES --> ESData
+    OpenSearch --> OSData
+    Infinity --> InfinityData
+    MySQL --> MySQLData
+    MinIO --> MinIOData
+    Redis --> RedisData
+    RagFlowServer --> LogsData
+
+    %% 网络连接
+    Nginx -.-> DockerNetwork
+    RagFlowServer -.-> DockerNetwork
+    MySQL -.-> DockerNetwork
+    Redis -.-> DockerNetwork
+    MinIO -.-> DockerNetwork
+    ES -.-> DockerNetwork
+    OpenSearch -.-> DockerNetwork
+    Infinity -.-> DockerNetwork
+    SandboxManager -.-> DockerNetwork
+
+    %% 样式定义
+    classDef userLayer fill:#e3f2fd,stroke:#1976d2,stroke-width:2px
+    classDef frontendLayer fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
+    classDef appLayer fill:#e8f5e8,stroke:#388e3c,stroke-width:2px
+    classDef dataLayer fill:#fff3e0,stroke:#f57c00,stroke-width:2px
+    classDef vectorLayer fill:#fce4ec,stroke:#c2185b,stroke-width:2px
+    classDef volumeLayer fill:#f1f8e9,stroke:#689f38,stroke-width:2px
+    classDef networkLayer fill:#e0f2f1,stroke:#00796b,stroke-width:2px
+
+    class User,LoadBalancer userLayer
+    class Nginx,WebUI frontendLayer
+    class RagFlowServer,MCPServer,SandboxManager appLayer
+    class MySQL,Redis,MinIO dataLayer
+    class choice1,ES,OpenSearch,Infinity vectorLayer
+    class ESData,OSData,InfinityData,MySQLData,MinIOData,RedisData,LogsData volumeLayer
+    class DockerNetwork networkLayer
