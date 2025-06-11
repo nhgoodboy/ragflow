@@ -27,11 +27,19 @@ import { ReactComponent as TemplateIcon } from '@/assets/svg/template.svg';
 import { ReactComponent as TuShareIcon } from '@/assets/svg/tushare.svg';
 import { ReactComponent as WenCaiIcon } from '@/assets/svg/wencai.svg';
 import { ReactComponent as YahooFinanceIcon } from '@/assets/svg/yahoo-finance.svg';
-import { CodeTemplateStrMap, ProgrammingLanguage } from '@/constants/agent';
+import {
+  initialKeywordsSimilarityWeightValue,
+  initialSimilarityThresholdValue,
+} from '@/components/similarity-slider';
+import {
+  AgentGlobals,
+  CodeTemplateStrMap,
+  ProgrammingLanguage,
+} from '@/constants/agent';
 
 export enum AgentDialogueMode {
-  Conversational = 'Conversational',
-  Task = 'Task',
+  Conversational = 'conversational',
+  Task = 'task',
 }
 
 import {
@@ -46,6 +54,11 @@ import { setInitialChatVariableEnabledFieldValue } from '@/utils/chat';
 export enum Channel {
   Text = 'text',
   News = 'news',
+}
+
+export enum PromptRole {
+  User = 'user',
+  Assistant = 'assistant',
 }
 
 import {
@@ -437,10 +450,20 @@ const initialQueryBaseValues = {
 };
 
 export const initialRetrievalValues = {
-  similarity_threshold: 0.2,
-  keywords_similarity_weight: 0.3,
+  query: '',
   top_n: 8,
-  ...initialQueryBaseValues,
+  top_k: 1024,
+  kb_ids: [],
+  rerank_id: '',
+  empty_response: '',
+  ...initialSimilarityThresholdValue,
+  ...initialKeywordsSimilarityWeightValue,
+  outputs: {
+    formalized_content: {
+      type: 'string',
+      value: '',
+    },
+  },
 };
 
 export const initialBeginValues = {
@@ -693,9 +716,24 @@ export const initialWaitingDialogueValues = {};
 export const initialAgentValues = {
   ...initialLlmBaseValues,
   sys_prompt: ``,
-  prompts: [],
+  prompts: [{ role: PromptRole.User, content: `{${AgentGlobals.SysQuery}}` }],
   message_history_window_size: 12,
   tools: [],
+  outputs: {
+    structured_output: {
+      // topic: {
+      //   type: 'string',
+      //   description:
+      //     'default:general. The category of the search.news is useful for retrieving real-time updates, particularly about politics, sports, and major current events covered by mainstream media sources. general is for broader, more general-purpose searches that may include a wide range of sources.',
+      //   enum: ['general', 'news'],
+      //   default: 'general',
+      // },
+    },
+    content: {
+      type: 'string',
+      value: '',
+    },
+  },
 };
 
 export const CategorizeAnchorPointPositions = [
@@ -781,6 +819,7 @@ export const RestrictedUpstreamMap = {
   [Operator.IterationStart]: [Operator.Begin],
   [Operator.Code]: [Operator.Begin],
   [Operator.WaitingDialogue]: [Operator.Begin],
+  [Operator.Agent]: [Operator.Begin],
 };
 
 export const NodeMap = {

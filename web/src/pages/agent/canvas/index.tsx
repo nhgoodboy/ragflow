@@ -6,6 +6,11 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { ChatSheet } from '../chat/chat-sheet';
+import {
+  AgentChatContext,
+  AgentChatLogContext,
+  AgentInstanceContext,
+} from '../context';
 import FormSheet from '../form-sheet/next';
 import {
   useHandleDrop,
@@ -13,8 +18,11 @@ import {
   useValidateConnection,
   useWatchNodeFormDataChange,
 } from '../hooks';
+import { useAddNode } from '../hooks/use-add-node';
 import { useBeforeDelete } from '../hooks/use-before-delete';
-import { useShowDrawer } from '../hooks/use-show-drawer';
+import { useCacheChatLog } from '../hooks/use-cache-chat-log';
+import { useShowDrawer, useShowLogSheet } from '../hooks/use-show-drawer';
+import { LogSheet } from '../log-sheet';
 import RunSheet from '../run-sheet';
 import { ButtonEdge } from './edge';
 import styles from './index.less';
@@ -77,7 +85,8 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
   } = useSelectCanvasData();
   const isValidConnection = useValidateConnection();
 
-  const { onDrop, onDragOver, setReactFlowInstance } = useHandleDrop();
+  const { onDrop, onDragOver, setReactFlowInstance, reactFlowInstance } =
+    useHandleDrop();
 
   const {
     onNodeClick,
@@ -97,9 +106,18 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
     hideDrawer,
   });
 
+  const { addEventList, setCurrentMessageId, currentEventListWithoutMessage } =
+    useCacheChatLog();
+
+  const { showLogSheet, logSheetVisible, hideLogSheet } = useShowLogSheet({
+    setCurrentMessageId,
+  });
+
   const { handleBeforeDelete } = useBeforeDelete();
 
   useWatchNodeFormDataChange();
+
+  const { addCanvasNode } = useAddNode(reactFlowInstance);
 
   return (
     <div className={styles.canvasWrapper}>
@@ -156,27 +174,37 @@ function AgentCanvas({ drawerVisible, hideDrawer }: IProps) {
         <Background />
       </ReactFlow>
       {formDrawerVisible && (
-        <FormSheet
-          node={clickedNode}
-          visible={formDrawerVisible}
-          hideModal={hideFormDrawer}
-          singleDebugDrawerVisible={singleDebugDrawerVisible}
-          hideSingleDebugDrawer={hideSingleDebugDrawer}
-          showSingleDebugDrawer={showSingleDebugDrawer}
-        ></FormSheet>
+        <AgentInstanceContext.Provider value={{ addCanvasNode }}>
+          <FormSheet
+            node={clickedNode}
+            visible={formDrawerVisible}
+            hideModal={hideFormDrawer}
+            singleDebugDrawerVisible={singleDebugDrawerVisible}
+            hideSingleDebugDrawer={hideSingleDebugDrawer}
+            showSingleDebugDrawer={showSingleDebugDrawer}
+          ></FormSheet>
+        </AgentInstanceContext.Provider>
       )}
       {chatVisible && (
-        <ChatSheet
-          visible={chatVisible}
-          hideModal={hideRunOrChatDrawer}
-        ></ChatSheet>
+        <AgentChatContext.Provider value={{ showLogSheet }}>
+          <AgentChatLogContext.Provider
+            value={{ addEventList, setCurrentMessageId }}
+          >
+            <ChatSheet hideModal={hideRunOrChatDrawer}></ChatSheet>
+          </AgentChatLogContext.Provider>
+        </AgentChatContext.Provider>
       )}
-
       {runVisible && (
         <RunSheet
           hideModal={hideRunOrChatDrawer}
           showModal={showChatModal}
         ></RunSheet>
+      )}
+      {logSheetVisible && (
+        <LogSheet
+          hideModal={hideLogSheet}
+          currentEventListWithoutMessage={currentEventListWithoutMessage}
+        ></LogSheet>
       )}
     </div>
   );
