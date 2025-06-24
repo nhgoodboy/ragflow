@@ -1,0 +1,155 @@
+# base stage
+FROM ubuntu:22.04 AS base
+USER root
+SHELL ["/bin/bash", "-c"]
+
+ARG NEED_MIRROR=1
+ARG LIGHTEN=0
+ENV LIGHTEN=${LIGHTEN}
+
+WORKDIR /ragflow
+
+# 使用中国镜像源
+RUN if [ "$NEED_MIRROR" == "1" ]; then \
+        sed -i 's|http://ports.ubuntu.com|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list; \
+        sed -i 's|http://archive.ubuntu.com|http://mirrors.tuna.tsinghua.edu.cn|g' /etc/apt/sources.list; \
+    fi;
+
+# 先安装基础工具，避免依赖外部服务
+RUN apt update && \
+    apt install -y ca-certificates wget curl && \
+    apt update
+
+# Copy models downloaded via download_deps.py
+RUN mkdir -p /ragflow/rag/res/deepdoc /root/.ragflow
+
+# 简化版本：不依赖外部ragflow_deps镜像
+# 直接下载和设置必要的文件
+RUN wget -O /ragflow/rag/res/huqie.txt.trie https://hf-mirror.com/InfiniFlow/huqie/resolve/main/huqie.txt.trie || \
+    echo "Warning: Could not download huqie.txt.trie"
+
+# 下载NLTK数据
+RUN python3 -c "import nltk; nltk.download('punkt_tab', download_dir='/root/nltk_data'); nltk.download('averaged_perceptron_tagger', download_dir='/root/nltk_data'); nltk.download('wordnet', download_dir='/root/nltk_data')" || \
+    echo "Warning: Could not download some NLTK data"
+
+# 设置环境变量
+ENV TIKA_SERVER_JAR="file:///ragflow/tika-server-standard-3.0.0.jar"
+ENV DEBIAN_FRONTEND=noninteractive
+
+# Setup apt and install dependencies
+RUN rm -f /etc/apt/apt.conf.d/docker-clean && \
+    echo 'Binary::apt::APT::Keep-Downloaded-Packages "true";' > /etc/apt/apt.conf.d/keep-cache && \
+    chmod 1777 /tmp && \
+    apt update && \
+    apt --no-install-recommends install -y ca-certificates && \
+    apt update && \
+    apt install -y libglib2.0-0 libglx-mesa0 libgl1 && \
+    apt install -y pkg-config libicu-dev && \
+    apt install -y default-jdk && \
+    apt install -y libatk-bridge2.0-0 && \
+    apt install -y libpython3-dev libgtk-4-1 libnss3 xdg-utils libgbm-dev && \
+    apt install -y libjemalloc-dev && \
+    apt install -y python3-pip pipx nginx unzip curl wget git vim less && \
+    apt install -y ghostscript
+
+# 配置pip镜像源
+RUN if [ "$NEED_MIRROR" == "1" ]; then \
+        pip3 config set global.index-url https://mirrors.aliyun.com/pypi/simple && \
+        pip3 config set global.trusted-host mirrors.aliyun.com; \
+        mkdir -p /etc/uv && \
+        echo "[[index]]" > /etc/uv/uv.toml && \
+        echo 'url = "https://mirrors.aliyun.com/pypi/simple"' >> /etc/uv/uv.toml && \
+        echo "default = true" >> /etc/uv/uv.toml; \
+    fi; \
+    pipx install uv
+
+ENV PYTHONDONTWRITEBYTECODE=1 DOTNET_SYSTEM_GLOBALIZATION_INVARIANT=1
+ENV PATH=/root/.local/bin:$PATH
+
+# nodejs
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - && \
+    apt purge -y nodejs npm cargo && \
+    apt autoremove -y && \
+    apt update && \
+    apt install -y nodejs
+
+# Rust
+RUN apt update && apt install -y curl build-essential \
+    && if [ "$NEED_MIRROR" == "1" ]; then \
+         export RUSTUP_DIST_SERVER="https://mirrors.tuna.tsinghua.edu.cn/rustup"; \
+         export RUSTUP_UPDATE_ROOT="https://mirrors.tuna.tsinghua.edu.cn/rustup/rustup"; \
+         echo "Using TUNA mirrors for Rustup."; \
+       fi; \
+    curl --proto '=https' --tlsv1.2 --http1.1 -sSf https://sh.rustup.rs | bash -s -- -y --profile minimal \
+    && echo 'export PATH="/root/.cargo/bin:${PATH}"' >> /root/.bashrc
+
+ENV PATH="/root/.cargo/bin:${PATH}"
+
+# builder stage
+FROM base AS builder
+USER root
+
+WORKDIR /ragflow
+
+# install dependencies from uv.lock file
+COPY pyproject.toml uv.lock ./
+
+RUN if [ "$NEED_MIRROR" == "1" ]; then \
+        sed -i 's|pypi.org|mirrors.aliyun.com/pypi|g' uv.lock; \
+    else \
+        sed -i 's|mirrors.aliyun.com/pypi|pypi.org|g' uv.lock; \
+    fi; \
+    if [ "$LIGHTEN" == "1" ]; then \
+        uv sync --python 3.10 --frozen; \
+    else \
+        uv sync --python 3.10 --frozen --all-extras; \
+    fi
+
+COPY web web
+COPY docs docs
+RUN cd web && npm install && npm run build
+
+COPY .git /ragflow/.git
+
+RUN version_info=$(git describe --tags --match=v* --first-parent --always); \
+    if [ "$LIGHTEN" == "1" ]; then \
+        version_info="$version_info slim"; \
+    else \
+        version_info="$version_info full"; \
+    fi; \
+    echo "RAGFlow version: $version_info"; \
+    echo $version_info > /ragflow/VERSION
+
+# production stage
+FROM base AS production
+USER root
+
+WORKDIR /ragflow
+
+# Copy Python environment and packages
+ENV VIRTUAL_ENV=/ragflow/.venv
+COPY --from=builder ${VIRTUAL_ENV} ${VIRTUAL_ENV}
+ENV PATH="${VIRTUAL_ENV}/bin:${PATH}"
+
+ENV PYTHONPATH=/ragflow/
+
+COPY web web
+COPY api api
+COPY conf conf
+COPY deepdoc deepdoc
+COPY rag rag
+COPY agent agent
+COPY graphrag graphrag
+COPY agentic_reasoning agentic_reasoning
+COPY intergrations intergrations
+COPY plugin plugin
+COPY mcp mcp
+COPY sandbox sandbox
+
+# 修复：从builder阶段复制VERSION文件
+COPY --from=builder /ragflow/VERSION VERSION
+
+COPY docker/entrypoint.sh ./entrypoint.sh
+RUN chmod +x ./entrypoint.sh
+
+ENTRYPOINT ["./entrypoint.sh"] 
